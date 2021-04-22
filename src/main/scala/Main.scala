@@ -5,13 +5,13 @@ import scala.io.Source
 
 object Main {
   def main(args: Array[String]): Unit = {
+    // Store data in an array of arrays
+    var data = loadData("test")
+
     // 1. Generate a random k
     // val k = defineK(10)
     val k = 3 // TODO change back to random
 
-    // Store data in an array of arrays
-    var data = loadData()
-    print(data(0)(0), data(0)(1))
     if (k > data.length) return
 
     // Create a map of k-ArrayDeques
@@ -19,11 +19,11 @@ object Main {
 
     // Create an array of k-arrays, without specifying their dimension
     var centroids = Array.ofDim[Double](k, 0)
-    //* Array(Array(), Array(), Array())
+    // Array(Array(), Array(), Array(), ...)
 
     for (i <- 0 to k - 1) {
       clusters += (i -> ArrayDeque.empty[Array[Double]])
-      //* HashMap(0 -> ArrayDeque(), 1 -> ArrayDeque(), 2 -> ArrayDeque())
+      // HashMap(0 -> ArrayDeque(), 1 -> ArrayDeque(), 2 -> ArrayDeque(), ...)
 
       // Fill the centroids array with the first items from data
       centroids(i) = data(i) //? Can be changed to random too
@@ -40,14 +40,16 @@ object Main {
   }
 
   def defineK(range: Int): Int = {
+    /* Choose a random k from a given range */
     var random = scala.util.Random
     val k = random.nextInt(range)
     k
   }
 
-  def loadData(): Array[Array[Double]] = {
+  def loadData(filename: String): Array[Array[Double]] = {
+    /* Load data into a 2d-array */
     Source
-      .fromFile("src/main/resources/data.csv")
+      .fromFile(s"src/main/resources/$filename.csv")
       .getLines()
       .map(_.split(",").map(_.trim.toDouble))
       .toArray
@@ -57,7 +59,9 @@ object Main {
       point: Array[Double],
       centroids: Array[Array[Double]],
       clusters: Map[Int, ArrayDeque[Array[Double]]]
-  ) {
+  ): Unit = {
+    /* Assign a given point to the cluster of the closest centroid */
+    // Get index of the closest centroid
     val centroidId = closestCentroid(point, centroids)
     clusters(centroidId).append(point)
   }
@@ -66,10 +70,13 @@ object Main {
       point: Array[Double],
       centroids: Array[Array[Double]]
   ): Int = {
+    /* Find the closest centroid to a given point and return its index*/
     var distances = new Array[Double](centroids.length)
+    // Store the distances into an array for each centroid
     for (i <- 0 to centroids.length - 1)
       distances(i) = euclideanDistance(point, centroids(i))
 
+    // Get the index of the shortest distance
     val centroidId = distances.indexOf(distances.min)
     centroidId
   }
@@ -78,6 +85,7 @@ object Main {
       point: Array[Double],
       centroid: Array[Double]
   ): Double = {
+    /* Calculate the euclidean distance between a point and a centroid */
     var sum = 0.0
     var d = 0.0
     for (i <- 0 to point.length - 1) {
@@ -90,7 +98,8 @@ object Main {
   def updateCentroids(
       centroids: Array[Array[Double]],
       clusters: Map[Int, ArrayDeque[Array[Double]]]
-  ) {
+  ): Unit = {
+    /* Assign each cluster's mean value as their new centroid */
     for ((k, v) <- clusters) {
       val newCentroid = mean(v)
       centroids(k) = newCentroid
@@ -98,17 +107,23 @@ object Main {
   }
 
   def mean(cluster: ArrayDeque[Array[Double]]): Array[Double] = {
+    /* Calculate the mean value of a given cluster of points */
     // if (cluster.empty) return //! ret null?
+
+    // Create an array of zeros with the same length as the first point
     var newCentroid = new Array[Double](cluster(0).length)
+
+    // Calculate the element wise sum of all the points
     for (i <- 0 to cluster.length - 1)
       for (j <- 0 to cluster(i).length - 1)
         newCentroid(j) += cluster(i)(j)
 
-    val numOfPoints = cluster.length
+    // Divide each element of the new centroid by the number of points
     for (i <- 0 to newCentroid.length - 1)
-      newCentroid(i) /= numOfPoints
+      newCentroid(i) /= cluster.length
 
     newCentroid
   }
 
+  def printResults(
 }
