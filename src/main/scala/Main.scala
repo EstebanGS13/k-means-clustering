@@ -7,22 +7,24 @@ import scala.util.Random
 object Main {
   def main(args: Array[String]): Unit = {
     // Store data in an array of arrays
-    var data = loadData("test")
+    var data = loadData("data")
+    var Iterations = 10
 
     // 1. Generate a random k
     // val k = randomNumber(10)
-    val k = 3 // TODO change back to random
+    val K = 3 // TODO change back to random
+    val Epsilon = 0
 
-    if (k > data.length) return
+    if (K > data.length) return
 
     // Create a map of k-ArrayDeques
     var clusters = Map.empty[Int, ArrayDeque[Array[Double]]]
 
     // Create an array of k-arrays, without specifying their dimension
-    var centroids = Array.ofDim[Double](k, 0)
+    var centroids = Array.ofDim[Double](K, 0)
     // Array(Array(), Array(), Array(), ...)
 
-    for (i <- 0 to k - 1) {
+    for (i <- 0 to K - 1) {
       clusters += (i -> ArrayDeque.empty[Array[Double]])
       // HashMap(0 -> ArrayDeque(), 1 -> ArrayDeque(), 2 -> ArrayDeque(), ...)
 
@@ -30,14 +32,33 @@ object Main {
       centroids(i) = data(i) //? Can be changed to random too
     }
 
-    // 2. & 3. Assign each point to their closest centroid
-    for (point <- data) assignPoint(point, centroids, clusters)
+    var i = 0
+    var previous_sse = 0.0
+    var end = false
+    while (!end) {
+      // Empty clusters
+      for ((k, v) <- clusters) clusters(k) = ArrayDeque.empty[Array[Double]]
 
-    // 4. Update each cluster's centroid
-    updateCentroids(centroids, clusters)
+      // 2. & 3. Assign each point to their closest centroid
+      for (point <- data) assignPoint(point, centroids, clusters)
 
-    // 5. Repeat
+      // 4. Update each cluster's centroid
+      updateCentroids(centroids, clusters)
 
+      printResults(centroids, clusters)
+      
+      // Calculate the squared sum of errors
+      val sse = calculateSse(centroids, clusters)
+      val error = (previous_sse - sse).abs
+      if (error <= Epsilon || i > Iterations) end = true
+
+      // if (i % 10 == 0) println(s"i: $i, e: $error")
+      println(s"i: $i, e: $error")
+
+      previous_sse = sse
+      i += 1
+      // 5. Repeat
+    }
   }
 
   def randomNumber(range: Int): Int = {
@@ -86,13 +107,17 @@ object Main {
       centroid: Array[Double]
   ): Double = {
     /* Calculate the euclidean distance between a point and a centroid */
+    sqrt(squaredDistance(point, centroid))
+  }
+
+  def squaredDistance(point: Array[Double], centroid: Array[Double]): Double = {
     var sum = 0.0
-    var d = 0.0
+    var sub = 0.0
     for (i <- 0 to point.length - 1) {
-      d = point(i) - centroid(i)
-      sum += d * d
+      sub = point(i) - centroid(i)
+      sum += sub * sub
     }
-    sqrt(sum)
+    sum
   }
 
   def updateCentroids(
@@ -126,13 +151,28 @@ object Main {
     newCentroid
   }
 
+  def calculateSse(
+      centroids: Array[Array[Double]],
+      clusters: Map[Int, ArrayDeque[Array[Double]]]
+  ): Double = {
+    var totalSum = 0.0
+    for ((centroidId, cluster) <- clusters) {
+      var sum = 0.0
+      for (point <- cluster)
+        sum += squaredDistance(point, centroids(centroidId))
+
+      totalSum += sum
+    }
+    totalSum
+  }
+
   def printResults(
       centroids: Array[Array[Double]],
       clusters: Map[Int, ArrayDeque[Array[Double]]]
   ): Unit = {
     for ((k, v) <- clusters) {
-      println(s"\nCentroid $k: ${centroids(k).mkString("[", ", ", "]")}")
-      print(s"Cluster: $k { ")
+      println(s"\nCentroid $k:   ${centroids(k).mkString("[", ", ", "]")}")
+      print(s"Cluster  $k: { ")
       for (point <- v) print(s"${point.mkString("[", ", ", "]")}, ")
       println("}\n")
     }
