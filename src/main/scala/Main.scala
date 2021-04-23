@@ -2,6 +2,7 @@ import scala.collection.mutable.ArrayDeque
 import scala.collection.mutable.Map
 import scala.math.sqrt
 import scala.io.Source
+import scala.util.Random
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -9,7 +10,7 @@ object Main {
     var data = loadData("test")
 
     // 1. Generate a random k
-    // val k = defineK(10)
+    // val k = randomNumber(10)
     val k = 3 // TODO change back to random
 
     if (k > data.length) return
@@ -39,11 +40,10 @@ object Main {
 
   }
 
-  def defineK(range: Int): Int = {
-    /* Choose a random k from a given range */
-    var random = scala.util.Random
-    val k = random.nextInt(range)
-    k
+  def randomNumber(range: Int): Int = {
+    /* Choose a random number from a given range */
+    val number = Random.nextInt(range)
+    number
   }
 
   def loadData(filename: String): Array[Array[Double]] = {
@@ -100,9 +100,10 @@ object Main {
       clusters: Map[Int, ArrayDeque[Array[Double]]]
   ): Unit = {
     /* Assign each cluster's mean value as their new centroid */
-    for ((k, v) <- clusters) {
-      val newCentroid = mean(v)
-      centroids(k) = newCentroid
+    for ((centroidId, cluster) <- clusters) {
+      // if (cluster.isEmpty)
+      val newCentroid = mean(cluster)
+      centroids(centroidId) = newCentroid
     }
   }
 
@@ -126,4 +127,14 @@ object Main {
   }
 
   def printResults(
+      centroids: Array[Array[Double]],
+      clusters: Map[Int, ArrayDeque[Array[Double]]]
+  ): Unit = {
+    for ((k, v) <- clusters) {
+      println(s"\nCentroid $k: ${centroids(k).mkString("[", ", ", "]")}")
+      print(s"Cluster: $k { ")
+      for (point <- v) print(s"${point.mkString("[", ", ", "]")}, ")
+      println("}\n")
+    }
+  }
 }
