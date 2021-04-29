@@ -1,4 +1,4 @@
-import scala.collection.mutable.ArrayDeque
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map
 import scala.math.sqrt
 import scala.io.Source
@@ -17,16 +17,16 @@ object Main {
 
     if (K > data.length) return
 
-    // Create a map of k-ArrayDeques
-    var clusters = Map.empty[Int, ArrayDeque[Array[Double]]]
+    // Create a map of k-ArrayBuffers
+    var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
 
     // Create an array of k-arrays, without specifying their dimension
     var centroids = Array.ofDim[Double](K, 0)
     // Array(Array(), Array(), Array(), ...)
 
     for (i <- 0 to K - 1) {
-      clusters += (i -> ArrayDeque.empty[Array[Double]])
-      // HashMap(0 -> ArrayDeque(), 1 -> ArrayDeque(), 2 -> ArrayDeque(), ...)
+      clusters += (i -> ArrayBuffer.empty[Array[Double]])
+      // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
 
       // Fill the centroids array with the first items from data
       centroids(i) = data(i) //? Can be changed to random too
@@ -37,7 +37,7 @@ object Main {
     var end = false
     while (!end) {
       // Empty clusters
-      for ((k, v) <- clusters) clusters(k) = ArrayDeque.empty[Array[Double]]
+      for ((k, v) <- clusters) clusters(k) = ArrayBuffer.empty[Array[Double]]
 
       // 2. & 3. Assign each point to their closest centroid
       for (point <- data) assignPoint(point, centroids, clusters)
@@ -46,7 +46,7 @@ object Main {
       updateCentroids(centroids, clusters)
 
       printResults(centroids, clusters)
-      
+
       // Calculate the squared sum of errors
       val sse = calculateSse(centroids, clusters)
       val error = (previous_sse - sse).abs
@@ -79,7 +79,7 @@ object Main {
   def assignPoint(
       point: Array[Double],
       centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayDeque[Array[Double]]]
+      clusters: Map[Int, ArrayBuffer[Array[Double]]]
   ): Unit = {
     /* Assign a given point to the cluster of the closest centroid */
     // Get index of the closest centroid
@@ -122,7 +122,7 @@ object Main {
 
   def updateCentroids(
       centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayDeque[Array[Double]]]
+      clusters: Map[Int, ArrayBuffer[Array[Double]]]
   ): Unit = {
     /* Assign each cluster's mean value as their new centroid */
     for ((centroidId, cluster) <- clusters) {
@@ -132,7 +132,7 @@ object Main {
     }
   }
 
-  def mean(cluster: ArrayDeque[Array[Double]]): Array[Double] = {
+  def mean(cluster: ArrayBuffer[Array[Double]]): Array[Double] = {
     /* Calculate the mean value of a given cluster of points */
     // if (cluster.empty) return //! ret null?
 
@@ -153,7 +153,7 @@ object Main {
 
   def calculateSse(
       centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayDeque[Array[Double]]]
+      clusters: Map[Int, ArrayBuffer[Array[Double]]]
   ): Double = {
     var totalSum = 0.0
     for ((centroidId, cluster) <- clusters) {
@@ -168,7 +168,7 @@ object Main {
 
   def printResults(
       centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayDeque[Array[Double]]]
+      clusters: Map[Int, ArrayBuffer[Array[Double]]]
   ): Unit = {
     for ((k, v) <- clusters) {
       println(s"\nCentroid $k:   ${centroids(k).mkString("[", ", ", "]")}")
