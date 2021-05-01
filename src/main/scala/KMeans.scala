@@ -6,68 +6,38 @@ import scala.math.sqrt
 import scala.io.Source
 import scala.util.Random
 
-object Main {
-  def main(args: Array[String]): Unit = {
-    runClass()
-    // runFunctions()
-  }
+class KMeans(val K: Int, val filename: String) {
+  val data = loadData()
+  var clusters = initClusters()
+  var centroids = initCentroids()
+  var error = 0.0
+  val Epsilon = 0
 
-  def runClass(): Unit = {
-    println("oop")
-    var kmeans = new KMeans(3, "data")
-    kmeans.predict(10)
-  }
-
-  def runFunctions(): Unit = {
-    println("funcs")
-    // Store data in an array of arrays
-    var data = loadData("data")
-    var Iterations = 10
-
-    // 1. Generate a random k
-    // val k = randomNumber(10)
-    val K = 3 // TODO change back to random
-    val Epsilon = 0
-
-    if (K > data.length) return
-
-    // Create a map of k-ArrayBuffers
-    var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
-
-    // Create an array of k-arrays, without specifying their dimension
-    var centroids = Array.ofDim[Double](K, 0)
-    // Array(Array(), Array(), Array(), ...)
-
-    for (i <- 0 to K - 1) {
-      clusters += (i -> ArrayBuffer.empty[Array[Double]])
-      // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
-
-      // Fill the centroids array with the first items from data
-      centroids(i) = data(i) //? Can be changed to random too
+  def predict(iterations: Int, progress: Boolean = false): Unit = {
+    if (K > data.length) {
+      println("K must be less than the size of the dataset")
+      return
     }
-
     var i = 0
-    var previous_sse = 0.0
     var end = false
+    var previous_sse = 0.0
     while (!end) {
-      // Empty clusters
-      for ((k, v) <- clusters) clusters(k) = ArrayBuffer.empty[Array[Double]]
-
+      emptyClusters()
+      //random centroids
       // 2. & 3. Assign each point to their closest centroid
-      for (point <- data) assignPoint(point, centroids, clusters)
+      for (point <- data) assignPoint(point)
 
       // 4. Update each cluster's centroid
-      updateCentroids(centroids, clusters)
-
-      printResults(centroids, clusters)
+      updateCentroids()
 
       // Calculate the squared sum of errors
-      val sse = calculateSse(centroids, clusters)
-      val error = (previous_sse - sse).abs
-      if (error <= Epsilon || i > Iterations) end = true
+      val sse = calculateSse()
+      error = (previous_sse - sse).abs
+      if (error <= Epsilon || i > iterations) end = true
 
-      // if (i % 10 == 0) println(s"i: $i, e: $error")
+      // if (progress)
       println(s"i: $i, e: $error")
+      // if (i % 10 == 0) println(s"i: $i, e: $error")
 
       previous_sse = sse
       i += 1
@@ -75,13 +45,7 @@ object Main {
     }
   }
 
-  def randomNumber(range: Int): Int = {
-    /* Choose a random number from a given range */
-    val number = Random.nextInt(range)
-    number
-  }
-
-  def loadData(filename: String): Array[Array[Double]] = {
+  def loadData(): Array[Array[Double]] = {
     /* Load data into a 2d-array */
     Source
       .fromFile(s"src/main/resources/$filename.csv")
@@ -90,22 +54,41 @@ object Main {
       .toArray
   }
 
-  def assignPoint(
-      point: Array[Double],
-      centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayBuffer[Array[Double]]]
-  ): Unit = {
+  def initClusters(): Map[Int, ArrayBuffer[Array[Double]]] = {
+    /* Create a map of k-ArrayBuffers */
+    var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
+    for (i <- 0 to K - 1)
+      clusters += (i -> ArrayBuffer.empty[Array[Double]])
+    // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
+
+    clusters
+  }
+
+  def initCentroids(): Array[Array[Double]] = {
+    /* Create an array of k-arrays, without specifying their dimension */
+    var centroids = Array.ofDim[Double](K, 0)
+    // Array(Array(), Array(), Array(), ...)
+
+    // Fill the centroids array with the first items from data
+    for (i <- 0 to K - 1)
+      centroids(i) = data(i) //? Can be changed to random too
+
+    centroids
+  }
+
+  def emptyClusters(): Unit = {
+    for ((k, v) <- clusters) clusters(k) = ArrayBuffer.empty[Array[Double]]
+  }
+
+  def assignPoint(point: Array[Double]): Unit = {
     /* Assign a given point to the cluster of the closest centroid */
     // Get index of the closest centroid
-    val centroidId = closestCentroid(point, centroids)
+    val centroidId = closestCentroid(point)
     clusters(centroidId).append(point)
   }
 
-  def closestCentroid(
-      point: Array[Double],
-      centroids: Array[Array[Double]]
-  ): Int = {
-    /* Find the closest centroid to a given point and return its index*/
+  def closestCentroid(point: Array[Double]): Int = {
+    /* Find the closest centroid to a given point and return its index */
     var distances = new Array[Double](centroids.length)
     // Store the distances into an array for each centroid
     for (i <- 0 to centroids.length - 1)
@@ -134,10 +117,7 @@ object Main {
     sum
   }
 
-  def updateCentroids(
-      centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayBuffer[Array[Double]]]
-  ): Unit = {
+  def updateCentroids(): Unit = {
     /* Assign each cluster's mean value as their new centroid */
     for ((centroidId, cluster) <- clusters) {
       // if (cluster.isEmpty)
@@ -165,10 +145,7 @@ object Main {
     newCentroid
   }
 
-  def calculateSse(
-      centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayBuffer[Array[Double]]]
-  ): Double = {
+  def calculateSse(): Double = {
     var totalSum = 0.0
     for ((centroidId, cluster) <- clusters) {
       var sum = 0.0
@@ -180,10 +157,7 @@ object Main {
     totalSum
   }
 
-  def printResults(
-      centroids: Array[Array[Double]],
-      clusters: Map[Int, ArrayBuffer[Array[Double]]]
-  ): Unit = {
+  def printResults(): Unit = {
     for ((k, v) <- clusters) {
       println(s"\nCentroid $k:   ${centroids(k).mkString("[", ", ", "]")}")
       print(s"Cluster  $k: { ")
