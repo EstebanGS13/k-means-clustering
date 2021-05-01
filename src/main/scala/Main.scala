@@ -20,38 +20,30 @@ object Main {
 
   def runFunctions(): Unit = {
     println("funcs")
-    // Store data in an array of arrays
-    var data = loadData("data")
-    var Iterations = 10
-
     // 1. Generate a random k
     // val k = randomNumber(10)
     val K = 3 // TODO change back to random
+    val filename = "data"
+
+    // Store data in an array of arrays
+    val data = loadData(filename)
+    val dataSize = data.length
+    var clusters = initClusters(K)
+    var centroids = initCentroids(K, data)
+    var error = 0.0
     val Epsilon = 0
 
-    if (K > data.length) return
+    var iterations = 10
 
-    // Create a map of k-ArrayBuffers
-    var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
-
-    // Create an array of k-arrays, without specifying their dimension
-    var centroids = Array.ofDim[Double](K, 0)
-    // Array(Array(), Array(), Array(), ...)
-
-    for (i <- 0 to K - 1) {
-      clusters += (i -> ArrayBuffer.empty[Array[Double]])
-      // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
-
-      // Fill the centroids array with the first items from data
-      centroids(i) = data(i) //? Can be changed to random too
+    if (K > dataSize) {
+      println("K must be less than the size of the dataset")
+      return
     }
-
     var i = 0
-    var previous_sse = 0.0
     var end = false
+    var previous_sse = 0.0
     while (!end) {
-      // Empty clusters
-      for ((k, v) <- clusters) clusters(k) = ArrayBuffer.empty[Array[Double]]
+      emptyClusters(clusters)
 
       // 2. & 3. Assign each point to their closest centroid
       for (point <- data) assignPoint(point, centroids, clusters)
@@ -59,12 +51,12 @@ object Main {
       // 4. Update each cluster's centroid
       updateCentroids(centroids, clusters)
 
-      printResults(centroids, clusters)
+      // printResults(centroids, clusters)
 
       // Calculate the squared sum of errors
       val sse = calculateSse(centroids, clusters)
-      val error = (previous_sse - sse).abs
-      if (error <= Epsilon || i > Iterations) end = true
+      error = (previous_sse - sse).abs
+      if (error <= Epsilon || i > iterations) end = true
 
       // if (i % 10 == 0) println(s"i: $i, e: $error")
       println(s"i: $i, e: $error")
@@ -88,6 +80,36 @@ object Main {
       .getLines()
       .map(_.split(",").map(_.trim.toDouble))
       .toArray
+  }
+
+  def initClusters(K: Int): Map[Int, ArrayBuffer[Array[Double]]] = {
+    /* Create a map of k-ArrayBuffers */
+    var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
+    for (i <- 0 to K - 1)
+      clusters += (i -> ArrayBuffer.empty[Array[Double]])
+    // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
+
+    clusters
+  }
+
+  def initCentroids(
+      K: Int,
+      data: Array[Array[Double]]
+  ): Array[Array[Double]] = {
+    /* Create an array of k-arrays, without specifying their dimension */
+    var centroids = Array.ofDim[Double](K, 0)
+    // Array(Array(), Array(), Array(), ...)
+
+    // Fill the centroids array with the first items from data
+    for (i <- 0 to K - 1)
+      centroids(i) = data(i) //? Can be changed to random too
+
+    centroids
+  }
+
+  def emptyClusters(clusters: Map[Int, ArrayBuffer[Array[Double]]]): Unit = {
+    /* Empty each cluster to re-assign the points */
+    for ((k, v) <- clusters) clusters(k) = ArrayBuffer.empty[Array[Double]]
   }
 
   def assignPoint(

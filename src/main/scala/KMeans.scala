@@ -8,13 +8,14 @@ import scala.util.Random
 
 class KMeans(val K: Int, val filename: String) {
   val data = loadData()
+  val dataSize = data.length
   var clusters = initClusters()
   var centroids = initCentroids()
   var error = 0.0
   val Epsilon = 0
 
   def predict(iterations: Int, progress: Boolean = false): Unit = {
-    if (K > data.length) {
+    if (K > dataSize) {
       println("K must be less than the size of the dataset")
       return
     }
@@ -77,6 +78,7 @@ class KMeans(val K: Int, val filename: String) {
   }
 
   def emptyClusters(): Unit = {
+    /* Empty each cluster to re-assign the points */
     for ((k, v) <- clusters) clusters(k) = ArrayBuffer.empty[Array[Double]]
   }
 
