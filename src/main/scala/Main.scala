@@ -9,12 +9,10 @@ import scala.util.Random
 object Main {
   def main(args: Array[String]): Unit = {
     runClass()
-    runFunctions()
   }
 
   def runClass(): Unit = {
     println("oop")
-    var kmeans = new KMeans(3, "data")
     kmeans.predict(10)
   }
 
@@ -99,11 +97,25 @@ object Main {
     var centroids = Array.ofDim[Double](K, 0)
     // Array(Array(), Array(), Array(), ...)
 
-    // Fill the centroids array with the first items from data
+    // Fill the centroids array with random points from data
     for (i <- 0 to K - 1)
-      centroids(i) = data(i) //? Can be changed to random too
+      centroids(i) = randomCentroid(centroids, data)
 
     centroids
+  }
+
+  def randomCentroid(
+      centroids: Array[Array[Double]],
+      data: Array[Array[Double]]
+  ): Array[Double] = {
+    /* Choose a random point from data, it must not be in centroids already */
+    var random: Option[Array[Double]] = None
+    var unique = false
+    while (!unique) {
+      random = Some(data(Random.nextInt(data.length)))
+      if (!centroids.exists(_.sameElements(random.get))) unique = true
+    }
+    random.get
   }
 
   def emptyClusters(clusters: Map[Int, ArrayBuffer[Array[Double]]]): Unit = {
@@ -169,20 +181,6 @@ object Main {
     }
   }
 
-  def randomCentroid(
-      centroids: Array[Array[Double]],
-      data: Array[Array[Double]]
-  ): Array[Double] = {
-    /* Choose a random point from data, it must not be in centroids already */
-    var random: Option[Array[Double]] = None
-    var unique = false
-    while (!unique) {
-      random = Some(data(Random.nextInt(data.length)))
-      if (!centroids.exists(_.sameElements(random.get))) unique = true
-    }
-    random.get
-  }
-
   def mean(cluster: ArrayBuffer[Array[Double]]): Array[Double] = {
     /* Calculate the mean value of a given cluster of points */
     // if (cluster.empty) return //! ret null?
@@ -222,9 +220,9 @@ object Main {
       clusters: Map[Int, ArrayBuffer[Array[Double]]]
   ): Unit = {
     for ((k, v) <- clusters) {
-      println(s"\nCentroid $k:   ${centroids(k).mkString("[", ", ", "]")}")
+      println(s"\nCentroid $k:   ${centroids(k).mkString("(", ", ", ")")}")
       print(s"Cluster  $k: { ")
-      for (point <- v) print(s"${point.mkString("[", ", ", "]")}, ")
+      for (point <- v) print(s"${point.mkString("(", ", ", ")")}, ")
       println("}\n")
     }
   }
