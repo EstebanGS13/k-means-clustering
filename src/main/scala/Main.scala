@@ -9,21 +9,21 @@ import scala.util.Random
 object Main {
   def main(args: Array[String]): Unit = {
     runClass()
+    runFunctions()
   }
 
   def runClass(): Unit = {
     println("oop")
+    var kmeans = new KMeans(3, "data")
     kmeans.predict(10)
+    kmeans.printResults()
   }
 
   def runFunctions(): Unit = {
     println("funcs")
-    // 1. Generate a random k
-    // val k = randomNumber(10)
-    val K = 3 // TODO change back to random
+    val K = 3
     val filename = "data"
 
-    // Store data in an array of arrays
     val data = loadData(filename)
     var clusters = initClusters(K)
     var centroids = initCentroids(K, data)
@@ -48,7 +48,6 @@ object Main {
 
       // 4. Update each cluster's centroid
       updateCentroids(centroids, clusters, data)
-
       // printResults(centroids, clusters)
 
       // Calculate the squared sum of errors
@@ -62,12 +61,7 @@ object Main {
       previous_sse = sse
       // 5. Repeat
     }
-  }
-
-  def randomNumber(range: Int): Int = {
-    /* Choose a random number from a given range */
-    val number = Random.nextInt(range)
-    number
+    printResults(centroids, clusters)
   }
 
   def loadData(filename: String): Array[Array[Double]] = {
@@ -183,8 +177,6 @@ object Main {
 
   def mean(cluster: ArrayBuffer[Array[Double]]): Array[Double] = {
     /* Calculate the mean value of a given cluster of points */
-    // if (cluster.empty) return //! ret null?
-
     // Create an array of zeros with the same length as the first point
     var newCentroid = new Array[Double](cluster(0).length)
 

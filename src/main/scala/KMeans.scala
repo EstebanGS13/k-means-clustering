@@ -24,12 +24,13 @@ class KMeans(val K: Int, val filename: String) {
     while (!end) {
       i += 1
       emptyClusters()
-      //random centroids
+
       // 2. & 3. Assign each point to their closest centroid
       for (point <- data) assignPoint(point)
 
       // 4. Update each cluster's centroid
       updateCentroids()
+      // printResults()
 
       // Calculate the squared sum of errors
       val sse = calculateSse()
