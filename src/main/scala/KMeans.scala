@@ -8,14 +8,13 @@ import scala.util.Random
 
 class KMeans(val K: Int, val filename: String) {
   val data = loadData()
-  val dataSize = data.length
   var clusters = initClusters()
   var centroids = initCentroids()
   var error = 0.0
   val Epsilon = 0
 
   def predict(iterations: Int, progress: Boolean = false): Unit = {
-    if (K > dataSize) {
+    if (K > data.length) {
       println("K must be less than the size of the dataset")
       return
     }
@@ -23,6 +22,7 @@ class KMeans(val K: Int, val filename: String) {
     var end = false
     var previous_sse = 0.0
     while (!end) {
+      i += 1
       emptyClusters()
       //random centroids
       // 2. & 3. Assign each point to their closest centroid
@@ -34,14 +34,13 @@ class KMeans(val K: Int, val filename: String) {
       // Calculate the squared sum of errors
       val sse = calculateSse()
       error = (previous_sse - sse).abs
-      if (error <= Epsilon || i > iterations) end = true
+      if (error <= Epsilon || i >= iterations) end = true
 
       // if (progress)
       println(s"i: $i, e: $error")
       // if (i % 10 == 0) println(s"i: $i, e: $error")
 
       previous_sse = sse
-      i += 1
       // 5. Repeat
     }
   }
@@ -122,16 +121,25 @@ class KMeans(val K: Int, val filename: String) {
   def updateCentroids(): Unit = {
     /* Assign each cluster's mean value as their new centroid */
     for ((centroidId, cluster) <- clusters) {
-      // if (cluster.isEmpty)
-      val newCentroid = mean(cluster)
+      // If the cluster is empty, pick a random centroid
+      val newCentroid = if (cluster.isEmpty) randomCentroid() else mean(cluster)
       centroids(centroidId) = newCentroid
     }
   }
 
+  def randomCentroid(): Array[Double] = {
+    /* Choose a random point from data, it must not be in centroids already */
+    var random: Option[Array[Double]] = None
+    var unique = false
+    while (!unique) {
+      random = Some(data(Random.nextInt(data.length)))
+      if (!centroids.exists(_.sameElements(random.get))) unique = true
+    }
+    random.get
+  }
+
   def mean(cluster: ArrayBuffer[Array[Double]]): Array[Double] = {
     /* Calculate the mean value of a given cluster of points */
-    // if (cluster.empty) return //! ret null?
-
     // Create an array of zeros with the same length as the first point
     var newCentroid = new Array[Double](cluster(0).length)
 
