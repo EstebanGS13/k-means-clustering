@@ -2,5 +2,8 @@
 .bsp/
 .metals/
 .vscode/
+null/
 project/
 target/
+*.py
+test.csv
