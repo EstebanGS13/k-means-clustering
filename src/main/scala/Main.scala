@@ -8,29 +8,39 @@ import scala.util.Random
 
 object Main {
   def main(args: Array[String]): Unit = {
-    runClass()
-    runFunctions()
+    val K = 3
+    val iterations = 10
+    val dataset = "data"
+    val progress = true
+    runClass(K, iterations, dataset, progress)
+    runFunctions(K, iterations, dataset, progress)
   }
 
-  def runClass(): Unit = {
+  def runClass(
+      K: Int,
+      iterations: Int,
+      dataset: String,
+      progress: Boolean
+  ): Unit = {
     println("oop")
-    var kmeans = new KMeans(3, "data")
-    kmeans.predict(10)
+    var kmeans = new KMeans(K, dataset)
+    kmeans.predict(iterations, progress)
     kmeans.printResults()
   }
 
-  def runFunctions(): Unit = {
+  def runFunctions(
+      K: Int,
+      iterations: Int,
+      dataset: String,
+      progress: Boolean
+  ): Unit = {
     println("funcs")
-    val K = 3
-    val filename = "data"
-
-    val data = loadData(filename)
+    val data = loadData(dataset)
     var clusters = initClusters(K)
     var centroids = initCentroids(K, data)
     var error = 0.0
     val Epsilon = 0
-
-    var iterations = 10
+    val nthIteration = iterations / 10
 
     if (K > data.length) {
       println("K must be less than the size of the dataset")
@@ -55,19 +65,20 @@ object Main {
       error = (previous_sse - sse).abs
       if (error <= Epsilon || i >= iterations) end = true
 
-      // if (i % 10 == 0) println(s"i: $i, e: $error")
-      println(s"i: $i, e: $error")
+      if (progress && i % nthIteration == 0)
+        println(s"iteration: $i, error: $error")
 
       previous_sse = sse
       // 5. Repeat
     }
+    println(s"Final\niteration: $i, error: $error")
     printResults(centroids, clusters)
   }
 
-  def loadData(filename: String): Array[Array[Double]] = {
+  def loadData(dataset: String): Array[Array[Double]] = {
     /* Load data into a 2d-array */
     Source
-      .fromFile(s"src/main/resources/$filename.csv")
+      .fromFile(s"src/main/resources/$dataset.csv")
       .getLines()
       .map(_.split(",").map(_.trim.toDouble))
       .toArray
@@ -76,7 +87,7 @@ object Main {
   def initClusters(K: Int): Map[Int, ArrayBuffer[Array[Double]]] = {
     /* Create a map of k-ArrayBuffers */
     var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
-    for (i <- 0 to K - 1)
+    for (i <- 0 until K)
       clusters += (i -> ArrayBuffer.empty[Array[Double]])
     // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
 
@@ -92,7 +103,7 @@ object Main {
     // Array(Array(), Array(), Array(), ...)
 
     // Fill the centroids array with random points from data
-    for (i <- 0 to K - 1)
+    for (i <- 0 until K)
       centroids(i) = randomCentroid(centroids, data)
 
     centroids
@@ -135,7 +146,7 @@ object Main {
     /* Find the closest centroid to a given point and return its index*/
     var distances = new Array[Double](centroids.length)
     // Store the distances into an array for each centroid
-    for (i <- 0 to centroids.length - 1)
+    for (i <- 0 until centroids.length)
       distances(i) = euclideanDistance(point, centroids(i))
 
     // Get the index of the shortest distance
@@ -154,7 +165,7 @@ object Main {
   def squaredDistance(point: Array[Double], centroid: Array[Double]): Double = {
     var sum = 0.0
     var sub = 0.0
-    for (i <- 0 to point.length - 1) {
+    for (i <- 0 until point.length) {
       sub = point(i) - centroid(i)
       sum += sub * sub
     }
@@ -181,12 +192,12 @@ object Main {
     var newCentroid = new Array[Double](cluster(0).length)
 
     // Calculate the element wise sum of all the points
-    for (i <- 0 to cluster.length - 1)
-      for (j <- 0 to cluster(i).length - 1)
+    for (i <- 0 until cluster.length)
+      for (j <- 0 until cluster(i).length)
         newCentroid(j) += cluster(i)(j)
 
     // Divide each element of the new centroid by the number of points
-    for (i <- 0 to newCentroid.length - 1)
+    for (i <- 0 until newCentroid.length)
       newCentroid(i) /= cluster.length
 
     newCentroid

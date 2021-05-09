@@ -18,6 +18,7 @@ class KMeans(val K: Int, val filename: String) {
       println("K must be less than the size of the dataset")
       return
     }
+    val nthIteration = iterations / 10
     var i = 0
     var end = false
     var previous_sse = 0.0
@@ -37,13 +38,13 @@ class KMeans(val K: Int, val filename: String) {
       error = (previous_sse - sse).abs
       if (error <= Epsilon || i >= iterations) end = true
 
-      // if (progress)
-      println(s"i: $i, e: $error")
-      // if (i % 10 == 0) println(s"i: $i, e: $error")
+      if (progress && i % nthIteration == 0)
+        println(s"iteration: $i, error: $error")
 
       previous_sse = sse
       // 5. Repeat
     }
+    println(s"Final\niteration: $i, error: $error")
   }
 
   def loadData(): Array[Array[Double]] = {
@@ -58,7 +59,7 @@ class KMeans(val K: Int, val filename: String) {
   def initClusters(): Map[Int, ArrayBuffer[Array[Double]]] = {
     /* Create a map of k-ArrayBuffers */
     var clusters = Map.empty[Int, ArrayBuffer[Array[Double]]]
-    for (i <- 0 to K - 1)
+    for (i <- 0 until K)
       clusters += (i -> ArrayBuffer.empty[Array[Double]])
     // HashMap(0 -> ArrayBuffer(), 1 -> ArrayBuffer(), 2 -> ArrayBuffer(), ...)
 
@@ -71,13 +72,15 @@ class KMeans(val K: Int, val filename: String) {
     // Array(Array(), Array(), Array(), ...)
 
     // Fill the centroids array with random points from data
-    for (i <- 0 to K - 1)
+    for (i <- 0 until K)
       centroids(i) = randomCentroid(centroids)
 
     centroids
   }
 
-  def randomCentroid(centroids: Array[Array[Double]] = this.centroids): Array[Double] = {
+  def randomCentroid(
+      centroids: Array[Array[Double]] = this.centroids
+  ): Array[Double] = {
     /* Choose a random point from data, it must not be in centroids already */
     var random: Option[Array[Double]] = None
     var unique = false
@@ -104,7 +107,7 @@ class KMeans(val K: Int, val filename: String) {
     /* Find the closest centroid to a given point and return its index */
     var distances = new Array[Double](centroids.length)
     // Store the distances into an array for each centroid
-    for (i <- 0 to centroids.length - 1)
+    for (i <- 0 until centroids.length)
       distances(i) = euclideanDistance(point, centroids(i))
 
     // Get the index of the shortest distance
@@ -123,7 +126,7 @@ class KMeans(val K: Int, val filename: String) {
   def squaredDistance(point: Array[Double], centroid: Array[Double]): Double = {
     var sum = 0.0
     var sub = 0.0
-    for (i <- 0 to point.length - 1) {
+    for (i <- 0 until point.length) {
       sub = point(i) - centroid(i)
       sum += sub * sub
     }
@@ -134,7 +137,8 @@ class KMeans(val K: Int, val filename: String) {
     /* Assign each cluster's mean value as their new centroid */
     for ((centroidId, cluster) <- clusters) {
       // If the cluster is empty, pick a random centroid
-      val newCentroid = if (cluster.length < 2) randomCentroid() else mean(cluster)
+      val newCentroid =
+        if (cluster.length < 2) randomCentroid() else mean(cluster)
       centroids(centroidId) = newCentroid
     }
   }
@@ -145,12 +149,12 @@ class KMeans(val K: Int, val filename: String) {
     var newCentroid = new Array[Double](cluster(0).length)
 
     // Calculate the element wise sum of all the points
-    for (i <- 0 to cluster.length - 1)
-      for (j <- 0 to cluster(i).length - 1)
+    for (i <- 0 until cluster.length)
+      for (j <- 0 until cluster(i).length)
         newCentroid(j) += cluster(i)(j)
 
     // Divide each element of the new centroid by the number of points
-    for (i <- 0 to newCentroid.length - 1)
+    for (i <- 0 until newCentroid.length)
       newCentroid(i) /= cluster.length
 
     newCentroid
