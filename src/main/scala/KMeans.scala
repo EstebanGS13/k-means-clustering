@@ -6,7 +6,7 @@ import scala.math.sqrt
 import scala.io.Source
 import scala.util.Random
 
-class KMeans(val K: Int, val filename: String) {
+class KMeans(val K: Int, val dataset: String) {
   val data = loadData()
   var clusters = initClusters()
   var centroids = initCentroids()
@@ -49,11 +49,20 @@ class KMeans(val K: Int, val filename: String) {
 
   def loadData(): Array[Array[Double]] = {
     /* Load data into a 2d-array */
-    Source
-      .fromFile(s"src/main/resources/$filename.csv")
-      .getLines()
-      .map(_.split(",").map(_.trim.toDouble))
-      .toArray
+    if (dataset == "iris") {
+      Source
+        .fromFile(s"src/main/resources/$dataset.csv")
+        .getLines()
+        .drop(1)
+        .map(_.split(",").take(4).map(_.trim.toDouble))
+        .toArray
+    } else {
+      Source
+        .fromFile(s"src/main/resources/$dataset.csv")
+        .getLines()
+        .map(_.split(",").map(_.trim.toDouble))
+        .toArray
+    }
   }
 
   def initClusters(): Map[Int, ArrayBuffer[Array[Double]]] = {
@@ -174,8 +183,11 @@ class KMeans(val K: Int, val filename: String) {
 
   def printResults(): Unit = {
     for ((k, v) <- clusters) {
-      println(s"\nCentroid $k:   ${centroids(k).mkString("(", ", ", ")")}")
-      print(s"Cluster  $k: { ")
+      println(
+        s"\nCentroid $k [size = ${centroids(k).length}]:   ${centroids(k)
+          .mkString("(", ", ", ")")}"
+      )
+      print(s"Cluster  $k [size = ${v.length}]: { ")
       for (point <- v) print(s"${point.mkString("(", ", ", ")")}, ")
       println("}\n")
     }

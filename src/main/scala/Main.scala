@@ -9,8 +9,8 @@ import scala.util.Random
 object Main {
   def main(args: Array[String]): Unit = {
     val K = 3
-    val iterations = 10
-    val dataset = "data"
+    val iterations = 100
+    val dataset = "iris"
     val progress = true
     runClass(K, iterations, dataset, progress)
     runFunctions(K, iterations, dataset, progress)
@@ -77,11 +77,20 @@ object Main {
 
   def loadData(dataset: String): Array[Array[Double]] = {
     /* Load data into a 2d-array */
-    Source
-      .fromFile(s"src/main/resources/$dataset.csv")
-      .getLines()
-      .map(_.split(",").map(_.trim.toDouble))
-      .toArray
+    if (dataset == "iris") {
+      Source
+        .fromFile(s"src/main/resources/$dataset.csv")
+        .getLines()
+        .drop(1)
+        .map(_.split(",").take(4).map(_.trim.toDouble))
+        .toArray
+    } else {
+      Source
+        .fromFile(s"src/main/resources/$dataset.csv")
+        .getLines()
+        .map(_.split(",").map(_.trim.toDouble))
+        .toArray
+    }
   }
 
   def initClusters(K: Int): Map[Int, ArrayBuffer[Array[Double]]] = {
@@ -223,8 +232,11 @@ object Main {
       clusters: Map[Int, ArrayBuffer[Array[Double]]]
   ): Unit = {
     for ((k, v) <- clusters) {
-      println(s"\nCentroid $k:   ${centroids(k).mkString("(", ", ", ")")}")
-      print(s"Cluster  $k: { ")
+      println(
+        s"\nCentroid $k [size = ${centroids(k).length}]:   ${centroids(k)
+          .mkString("(", ", ", ")")}"
+      )
+      print(s"Cluster  $k [size = ${v.length}]: { ")
       for (point <- v) print(s"${point.mkString("(", ", ", ")")}, ")
       println("}\n")
     }
