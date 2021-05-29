@@ -1,7 +1,6 @@
 package scala
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Map
+import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.math.sqrt
 import scala.io.Source
 import scala.util.Random
@@ -31,7 +30,7 @@ class KMeans(val K: Int, val dataset: String) {
 
       // 4. Update each cluster's centroid
       updateCentroids()
-      // printResults()
+      // printInfo()
 
       // Calculate the squared sum of errors
       val sse = calculateSse()
@@ -44,17 +43,18 @@ class KMeans(val K: Int, val dataset: String) {
       previous_sse = sse
       // 5. Repeat
     }
-    println(s"Final\niteration: $i, error: $error")
+    if (progress)
+      println(s"Final\niteration: $i, error: $error")
   }
 
   def loadData(): Array[Array[Double]] = {
     /* Load data into a 2d-array */
-    if (dataset == "iris") {
+    if (dataset.startsWith("iris")) {
       Source
         .fromFile(s"src/main/resources/$dataset.csv")
         .getLines()
         .drop(1)
-        .map(_.split(",").take(4).map(_.trim.toDouble))
+        .map(_.split(",").map(_.trim.toDouble))
         .toArray
     } else {
       Source
@@ -181,14 +181,15 @@ class KMeans(val K: Int, val dataset: String) {
     totalSum
   }
 
-  def printResults(): Unit = {
+  def printInfo(printClusters: Boolean = true): Unit = {
     for ((k, v) <- clusters) {
       println(
         s"\nCentroid $k [size = ${centroids(k).length}]:   ${centroids(k)
           .mkString("(", ", ", ")")}"
       )
       print(s"Cluster  $k [size = ${v.length}]: { ")
-      for (point <- v) print(s"${point.mkString("(", ", ", ")")}, ")
+      if (printClusters)
+        for (point <- v) print(s"${point.mkString("(", ", ", ")")}, ")
       println("}\n")
     }
   }
