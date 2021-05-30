@@ -49,20 +49,9 @@ class KMeans(val K: Int, val dataset: String) {
 
   def loadData(): Array[Array[Double]] = {
     /* Load data into a 2d-array */
-    if (dataset.startsWith("iris")) {
-      Source
-        .fromFile(s"src/main/resources/$dataset.csv")
-        .getLines()
-        .drop(1)
-        .map(_.split(",").map(_.trim.toDouble))
-        .toArray
-    } else {
-      Source
-        .fromFile(s"src/main/resources/$dataset.csv")
-        .getLines()
-        .map(_.split(",").map(_.trim.toDouble))
-        .toArray
-    }
+    val data = Source.fromFile(s"src/main/resources/$dataset.csv").getLines()
+    if (dataset.startsWith("iris")) data.drop(1)
+    data.map(_.split(",").map(_.trim.toDouble)).toArray
   }
 
   def initClusters(): Map[Int, ArrayBuffer[Array[Double]]] = {
