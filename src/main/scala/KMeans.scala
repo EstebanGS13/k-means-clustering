@@ -181,7 +181,7 @@ class KMeans(val K: Int, val dataset: String) {
     totalSum
   }
 
-  def printInfo(printClusters: Boolean = true): Unit = {
+  def printInfo(printClusters: Boolean = false): Unit = {
     for ((k, v) <- clusters) {
       println(
         s"\nCentroid $k [size = ${centroids(k).length}]:   ${centroids(k)

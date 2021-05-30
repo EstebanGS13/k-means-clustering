@@ -2,12 +2,13 @@ package scala
 
 import concurrencyCommon._
 
+import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ArrayBuffer
 import scala.math.sqrt
 import scala.io.Source
 import scala.util.Random
 
-class ParKMeans(val K: Int, val dataset: String) {
+class ParKMeans(val K: Int, val dataset: String, val partition: Int = 4) {
   val data = loadData()
   var clusters: TrieMap[Int, ArrayBuffer[Array[Double]]] = null
   var centroids = initCentroids()
@@ -20,7 +21,6 @@ class ParKMeans(val K: Int, val dataset: String) {
       return
     }
     val nthIteration = iterations / 10
-    val n = 4
     var i = 0
     var end = false
     var previous_sse = 0.0
@@ -29,7 +29,7 @@ class ParKMeans(val K: Int, val dataset: String) {
       // emptyClusters()
 
       // 2. & 3. Assign each point to their closest centroid
-      clusters = calculateClusters(0, data.length, data.length / n)
+      clusters = calculateClusters(0, data.length, data.length / partition)
 
       // 4. Update each cluster's centroid
       updateCentroids()
@@ -222,7 +222,7 @@ class ParKMeans(val K: Int, val dataset: String) {
     totalSum
   }
 
-  def printInfo(printClusters: Boolean = true): Unit = {
+  def printInfo(printClusters: Boolean = false): Unit = {
     for ((k, v) <- clusters) {
       println(
         s"\nCentroid $k [size = ${centroids(k).length}]:   ${centroids(k)
