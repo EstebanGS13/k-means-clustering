@@ -1,6 +1,5 @@
 package scala
 
-import concurrencyCommon._
 import org.scalameter._
 
 object Main {
@@ -10,6 +9,8 @@ object Main {
     val iterations = 100
     val progress = false
     val runs = 10
+
+    example()
 
     var timeSeq, timePar = 0.0
     for (i <- 0 until runs) {
@@ -40,5 +41,11 @@ object Main {
       func(i, p)
     }
     time.value
+  }
+
+  def example(): Unit = {
+    val kmeans = new KMeans(3, "iris")
+    kmeans.predict(100, true)
+    kmeans.printInfo(true)
   }
 }
