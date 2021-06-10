@@ -10,8 +10,10 @@ object Main {
     val progress = false
     val runs = 10
 
+    println("Example: iris dataset")
     example()
 
+    println("Measuring time: digits dataset")
     var timeSeq, timePar = 0.0
     for (i <- 0 until runs) {
       val kmeans = new KMeans(K, dataset)

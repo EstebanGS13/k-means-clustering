@@ -105,6 +105,13 @@ class ParKMeans(val K: Int, val dataset: String, val partition: Int = 4) {
     val len = end - start
     if (len <= limit)
       mapRange(start, end)
+    // {
+    // //! Note: the synchronized approach is way slower than appending the clusters
+    //   val temp_clusters = mapRange(start, end)
+    //   for (i <- 0 until K)
+    //     clusters(i).synchronized {
+    //       clusters(i) ++= temp_clusters(i)
+    //     }
     else {
       val half = start + (end - start) / 2
       val (temp_clusters1, temp_clusters2) = parallel(
@@ -125,6 +132,7 @@ class ParKMeans(val K: Int, val dataset: String, val partition: Int = 4) {
     val temp_clusters = initClusters()
     var i = start
     while (i < end) {
+      // assignPoint(data(i))   //! Using synchronized
       val point = data(i)
       val centroidId = closestCentroid(point)
       temp_clusters(centroidId) += point
