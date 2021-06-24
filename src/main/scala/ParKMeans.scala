@@ -28,7 +28,7 @@ class ParKMeans(val K: Int, val dataset: String, val partition: Int = 4) {
       i += 1
       // emptyClusters()
 
-      // 2. & 3. Assign each point to their closest centroid
+      // 2. & 3. Assign each point to its closest centroid
       clusters = calculateClusters(0, data.length, data.length / partition)
 
       // 4. Update each cluster's centroid

@@ -25,7 +25,7 @@ class KMeans(val K: Int, val dataset: String) {
       i += 1
       emptyClusters()
 
-      // 2. & 3. Assign each point to their closest centroid
+      // 2. & 3. Assign each point to its closest centroid
       for (point <- data) assignPoint(point)
 
       // 4. Update each cluster's centroid
