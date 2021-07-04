@@ -1,6 +1,7 @@
 package scala
 
 import org.scalameter._
+import scala.collection.parallel.CollectionConverters._
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -23,7 +24,7 @@ object Main {
 
       // Start with the same centroids
       kmeansPar.centroids = kmeans.centroids.map(_.clone)
-      parColl.centroids = kmeans.centroids.map(_.clone)
+      parColl.centroids = kmeans.centroids.map(_.clone).map(_.par).par
 
       timeSeq += measure(kmeans.predict, iterations, progress)
       timePar += measure(kmeansPar.predict, iterations, progress)

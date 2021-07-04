@@ -1,5 +1,8 @@
 package scala
 
+import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.immutable.ParMap
+import scala.collection.parallel.mutable.ParArray
 import scala.math.sqrt
 import scala.io.Source
 import scala.util.Random
@@ -7,7 +10,7 @@ import scala.util.Random
 class ParCollKMeans(val K: Int, val dataset: String) {
   val data = loadData()
   var centroids = initCentroids()
-  var clusters: Map[Int, Array[Array[Double]]] = null
+  var clusters: ParMap[Int, ParArray[ParArray[Double]]] = null
   var error = 0.0
   val Epsilon = 0
 
@@ -45,25 +48,25 @@ class ParCollKMeans(val K: Int, val dataset: String) {
       println(s"Final\niteration: $i, error: $error")
   }
 
-  def loadData(): Array[Array[Double]] = {
+  def loadData(): ParArray[ParArray[Double]] = {
     /* Load data into a 2d-array */
     val data = Source.fromFile(s"src/main/resources/$dataset.csv").getLines()
     if (dataset.startsWith("iris")) data.drop(1)
-    data.map(_.split(",").map(_.trim.toDouble)).toArray
+    data.map(_.split(",").map(_.trim.toDouble)).toArray.map(_.par).par
   }
 
-  def initCentroids(): Array[Array[Double]] = {
+  def initCentroids(): ParArray[ParArray[Double]] = {
     /* Create an array of k-arrays, without specifying their dimension */
-    val centroids = Array.ofDim[Double](K, 0)
+    val centroids = Array.ofDim[Double](K, 0).map(_.par).par
     // Fill the centroids array with random points from data
     centroids.map(i => randomCentroid(centroids))
   }
 
   def randomCentroid(
-      centroids: Array[Array[Double]] = this.centroids
-  ): Array[Double] = {
+      centroids: ParArray[ParArray[Double]] = this.centroids
+  ): ParArray[Double] = {
     /* Choose a random point from data, it must not be in centroids already */
-    var random: Option[Array[Double]] = None
+    var random: Option[ParArray[Double]] = None
     var unique = false
     while (!unique) {
       random = Some(data(Random.nextInt(data.length)))
@@ -77,7 +80,7 @@ class ParCollKMeans(val K: Int, val dataset: String) {
     clusters = data.groupBy(closestCentroid)
   }
 
-  def closestCentroid(point: Array[Double]): Int = {
+  def closestCentroid(point: ParArray[Double]): Int = {
     /* Find the closest centroid to a given point and return its index */
     // Store the distances into an array for each centroid
     val distances = centroids.map(i => euclideanDistance(point, i))
@@ -86,14 +89,14 @@ class ParCollKMeans(val K: Int, val dataset: String) {
   }
 
   def euclideanDistance(
-      point: Array[Double],
-      centroid: Array[Double]
+      point: ParArray[Double],
+      centroid: ParArray[Double]
   ): Double = {
     /* Calculate the euclidean distance between a point and a centroid */
     sqrt(squaredDistance(point, centroid))
   }
 
-  def squaredDistance(point: Array[Double], centroid: Array[Double]): Double = {
+  def squaredDistance(point: ParArray[Double], centroid: ParArray[Double]): Double = {
     (point zip centroid).map { case (p, c) =>
       (p - c) * (p - c)
     }.sum
@@ -107,7 +110,7 @@ class ParCollKMeans(val K: Int, val dataset: String) {
     }
   }
 
-  def mean(cluster: Array[Array[Double]]): Array[Double] = {
+  def mean(cluster: ParArray[ParArray[Double]]): ParArray[Double] = {
     /* Calculate the mean value of a given cluster of points */
     cluster.transpose.map(_.sum).map(_ / cluster.length)
   }
